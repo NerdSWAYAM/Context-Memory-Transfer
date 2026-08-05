@@ -1,0 +1,26 @@
+{
+    "manifest_version": 3,
+    "name" : "Context Memory Transfer",
+    "version" : "1.0",
+
+    "description" : "A Capsule like thing which can be used to Transfer Context Memory from one LLM to another.",
+
+    "icons": {
+        "16": "assests/pokeball.png",
+        "32": "assests/pokeball.png",
+        "48": "assests/pokeball.png",
+        "128": "assests/pokeball.png"
+    },
+
+    "action" : {
+        "default_popup" : "popup.html",
+        "default_icon": {
+            "16": "assests/pokeball.png",
+            "32": "assests/pokeball.png",
+            "48": "assests/pokeball.png",
+            "128": "assests/pokeball.png"
+        }
+    },
+
+    "author" : "Swayam Kesarkar"
+}
