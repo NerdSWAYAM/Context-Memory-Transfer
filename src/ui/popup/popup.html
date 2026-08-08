@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poké Context Memory</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="header">
+        <h6>Poké Context Memory</h6>
+        <div class="button-group">
+            <button id="capture-btn">Capture</button>
+            <button id="clear-btn">Clear History</button>
+        </div>
+    </div>
+    
+    <div class="message-container">
+        <ul id="message-list">
+            <!-- Messages will be injected here -->
+        </ul>
+    </div>
+
+    <!-- Ensure type="module" is used for Vite -->
+    <script type="module" src="popup.ts"></script>
+</body>
+</html>

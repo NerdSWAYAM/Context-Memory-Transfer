@@ -1,0 +1,1 @@
+// loads all embeddings into memory (a Float32Array[]) and performs cosine similarity. On large collections, it could switch to a lightweight HNSW library, but the default works for thousands of entries.
