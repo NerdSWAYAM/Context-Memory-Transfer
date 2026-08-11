@@ -8,11 +8,17 @@
 </head>
 <body>
     <div class="header">
-        <h6>Poké Context Memory</h6>
+        <h6>Poké Context Ball</h6>
+        <div id="active-chat-title" style="font-size: 11px; color: #555; margin-bottom: 8px; font-weight: normal; font-style: italic;">Loading active chat...</div>
         <div class="button-group">
             <button id="capture-btn">Capture</button>
+            <button id="summarise-btn">Summarise</button>
             <button id="clear-btn">Clear History</button>
         </div>
+    </div>
+    
+    <div id="summary-container" style="display: none; padding: 10px; background: #f0f0f0; margin-bottom: 10px; border-radius: 4px; font-size: 13px;">
+        <!-- ML Summary will appear here -->
     </div>
     
     <div class="message-container">

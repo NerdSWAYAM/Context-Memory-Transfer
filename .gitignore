@@ -8,3 +8,6 @@ dist-ssr/
 # Environment / Local files
 *.local
 .DS_Store
+
+.env
+.cursor

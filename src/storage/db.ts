@@ -1,14 +1,17 @@
 import Dexie, { Table } from 'dexie';
-import { ChatMessage } from '../shared/types';
+import { ChatMessage, Conversation } from '../shared/types';
 
 export class ContextMemoryDB extends Dexie {
   rawMessages!: Table<ChatMessage, string>;
+  conversations!: Table<Conversation, string>;
 
   constructor() {
     super('ContextMemoryDB');
     this.version(1).stores({
-      // Primary key is 'id'
-      // Indices on role, timestamp, and chatId for fast querying
+      rawMessages: 'id, role, timestamp, chatId'
+    });
+    this.version(2).stores({
+      conversations: 'id, nativeChatId, platform, updatedAt',
       rawMessages: 'id, role, timestamp, chatId'
     });
   }

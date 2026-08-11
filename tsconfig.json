@@ -1,10 +1,11 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
+    "target": "esnext",
     "useDefineForClassFields": true,
     "module": "ESNext",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "skipLibCheck": true,
+    "types": ["chrome"],
 
     /* Bundler mode */
     "moduleResolution": "bundler",

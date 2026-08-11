@@ -1,5 +1,5 @@
 {
-  "name": "context-memory-transfer",
+  "name": "Poké Context Ball",
   "version": "1.0.0",
   "description": "",
   "type": "module",
@@ -16,7 +16,7 @@
     "url": "git+https://github.com/NerdSWAYAM/Context-Memory-Transfer.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "Swayam Kesarkar",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/NerdSWAYAM/Context-Memory-Transfer/issues"
@@ -24,6 +24,7 @@
   "homepage": "https://github.com/NerdSWAYAM/Context-Memory-Transfer#readme",
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.0.0-beta.33",
+    "@types/chrome": "^0.2.5",
     "typescript": "^7.0.2",
     "vite": "^8.2.1"
   },
