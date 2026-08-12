@@ -1,6 +1,10 @@
+import { cleanTranscript } from './preprocess';
+
 export async function summarize(transcript: string, onProgress?: (partial: string) => void): Promise<string> {
+    const cleanedTranscript = cleanTranscript(transcript);
+
     if (onProgress) {
-        onProgress('Sending transcript to OpenRouter for summarization...');
+        onProgress('Poke Ball Capturing the Context...');
     }
 
     const apiKey = import.meta.env.OPENROUTER_API_KEY;
@@ -13,7 +17,7 @@ export async function summarize(transcript: string, onProgress?: (partial: strin
         throw new Error('OpenRouter API key is missing. Please check your .env file.');
     }
 
-    const prompt = `Please summarize the following conversation chronologically and clearly:\n\n${transcript}`;
+    const prompt = `${cleanedTranscript}`;
 
     try {
         const response = await fetch(apiUrl, {
@@ -22,8 +26,8 @@ export async function summarize(transcript: string, onProgress?: (partial: strin
                 'Authorization': `Bearer ${apiKey}`,
                 'Content-Type': 'application/json',
                 // Optional headers for OpenRouter rankings
-                'HTTP-Referer': 'https://github.com/Context-Memory',
-                'X-OpenRouter-Title': 'Poké Context Memory',
+                'HTTP-Referer': 'https://github.com/NerdSWAYAM/Context-Memory-Transfer',
+                'X-OpenRouter-Title': 'Poké Context Ball',
             },
             body: JSON.stringify({
                 model: 'openai/gpt-4o-mini',
@@ -31,7 +35,25 @@ export async function summarize(transcript: string, onProgress?: (partial: strin
                 messages: [
                     {
                         role: "system",
-                        content: "",
+                        content: `
+                        You are a Context Memory Extractor.
+                        Your task is to read a conversation between a user and an AI assistant, and produce a **structured, fact-dense summary** that another AI can use to fully understand the context and continue the work.
+                        Rules:
+                        - Do NOT narrate the conversation; only extract and structure the information.
+                        - Use the following sections exactly:
+                        ## Goal
+                        (What is the user ultimately trying to achieve?)
+                        ## Key Decisions
+                        (Any choices made and why, in bullet points)
+                        ## Technical Details
+                        (Code snippets, API names, version numbers, exact commands)
+                        ## Warnings & Pitfalls
+                        (Things the assistant warned about, potential problems)
+                        ## Next Steps
+                        (Unfinished tasks or planned actions)
+                        - Keep each section concise but complete. Omit sections if no relevant info exists.
+                        - Never add speculation; only use what is stated in the transcript.
+                        `,
                     },
                     {
                         role: 'user',

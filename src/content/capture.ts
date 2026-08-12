@@ -29,7 +29,9 @@ function extractMessage(node: Element): ChatMessage | null {
   };
 }
 
-function getConversationInfo(): ConversationMetadata {
+let cachedTempId = '';
+
+export function getConversationInfo(): ConversationMetadata {
   let nativeId = '';
   let platform = '';
   const url = window.location.href;
@@ -42,7 +44,10 @@ function getConversationInfo(): ConversationMetadata {
 
   // Fallback if no native ID (e.g., unsaved chat)
   if (!nativeId) {
-    nativeId = 'temp_' + Math.random().toString(36).substring(2, 11);
+    if (!cachedTempId) {
+      cachedTempId = 'temp_' + Math.random().toString(36).substring(2, 11);
+    }
+    nativeId = cachedTempId;
   }
 
   let title = document.title || 'New Chat';

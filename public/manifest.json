@@ -30,9 +30,51 @@
         {
             "matches": [
                 "https://chatgpt.com/*",
-                "https://chat.openai.com/*"
+                "https://chat.openai.com/*",
+                "https://gemini.google.com/*",
+                "https://claude.ai/*",
+                "https://grok.com/*",
+                "https://grok.x.ai/*",
+                "https://www.perplexity.ai/*",
+                "https://chat.deepseek.com/*",
+                "https://copilot.microsoft.com/*",
+                "https://poe.com/*",
+                "https://huggingface.co/chat/*",
+                "https://chat.mistral.ai/*",
+                "https://www.meta.ai/*",
+                "https://v0.dev/*",
+                "https://lovable.dev/*",
+                "https://lovable.ai/*",
+                "https://*.emergent.ai/*"
             ],
-            "js": ["src/content/capture.ts"]
+            "js": ["src/content/capture.ts", "src/content/inject.ts"],
+            "run_at": "document_end"            
+        }
+    ],
+
+    "host_permissions": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*",
+        "https://gemini.google.com/*",
+        "https://claude.ai/*",
+        "https://grok.com/*",
+        "https://grok.x.ai/*",
+        "https://www.perplexity.ai/*",
+        "https://chat.deepseek.com/*",
+        "https://copilot.microsoft.com/*",
+        "https://poe.com/*",
+        "https://huggingface.co/chat/*",
+        "https://chat.mistral.ai/*",
+        "https://www.meta.ai/*",
+        "https://v0.dev/*",
+        "https://lovable.dev/*",
+        "https://lovable.ai/*"
+    ],
+
+    "web_accessible_resources": [
+        {
+            "resources": ["icons/pokeball.png"],
+            "matches": ["<all_urls>"]
         }
     ],
 
