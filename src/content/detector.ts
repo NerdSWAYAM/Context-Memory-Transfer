@@ -1,10 +1,16 @@
 import { ProviderAdapter } from '../shared/types';
 import { ChatGPTAdapter } from './providers/chatgpt';
+import { ClaudeAdapter } from './providers/claude';
+import { GeminiAdapter } from './providers/gemini';
+import { DeepSeekAdapter } from './providers/deepseek';
 import { GenericAdapter } from './providers/generic';
 
 const registry: ProviderAdapter[] = [
   new ChatGPTAdapter(),
-  new GenericAdapter() // Always last as a fallback
+  new ClaudeAdapter(),
+  new GeminiAdapter(),
+  new DeepSeekAdapter(),
+  new GenericAdapter(), // Always last as a fallback
 ];
 
 export function detectProvider(): ProviderAdapter {

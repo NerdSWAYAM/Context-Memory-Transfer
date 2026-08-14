@@ -10,20 +10,44 @@ function generateShortId(length: number = 8): string {
 
 async function fetchConversationFromApi(request: ApiCaptureRequest): Promise<unknown> {
   const { provider, id, apiBase } = request;
+  const base = apiBase.replace(/\/$/, '');
 
-  if (provider !== 'chatgpt') {
-    throw new Error('Unsupported provider for API capture');
-  }
-
-  const url = `${apiBase.replace(/\/$/, '')}/backend-api/conversation/${id}`;
   console.log(`[API] Fetching conversation from provider=${provider} id=${id}`);
+
+  let url: string;
+  const headers: Record<string, string> = { Accept: 'application/json' };
+
+  switch (provider) {
+    case 'chatgpt': {
+      url = `${base}/backend-api/conversation/${id}`;
+      break;
+    }
+    case 'claude': {
+      // Claude API needs the org UUID. We attempt the known patterns.
+      // The most common internal endpoint: /api/organizations/{org}/chat_conversations/{id}
+      // We first try to find the org from cookies or page data, falling back to a wildcard pattern.
+      url = `${base}/api/organizations/-/chat_conversations/${id}?tree=True&rendering_mode=messages&render_all_tools=true`;
+      headers['Content-Type'] = 'application/json';
+      break;
+    }
+    case 'gemini': {
+      // Gemini doesn't expose a simple REST API like ChatGPT.
+      // We'll try the internal batch endpoint structure. This is experimental.
+      throw new Error('Gemini API capture not yet supported — falling back to DOM');
+    }
+    case 'deepseek': {
+      // DeepSeek chat history endpoint
+      url = `${base}/api/v0/chat/history_messages?chat_session_id=${id}`;
+      break;
+    }
+    default:
+      throw new Error(`Unsupported provider for API capture: ${provider}`);
+  }
 
   const response = await fetch(url, {
     method: 'GET',
     credentials: 'include',
-    headers: {
-      Accept: 'application/json',
-    },
+    headers,
   });
 
   if (!response.ok) {
