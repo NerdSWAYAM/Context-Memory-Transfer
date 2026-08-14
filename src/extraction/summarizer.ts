@@ -3,8 +3,9 @@ export async function summarize(transcript: string, onProgress?: (partial: strin
         onProgress('Sending transcript to OpenRouter for summarization...');
     }
 
-    const apiKey = import.meta.env.OPENROUTER_API_KEY;
-    let apiUrl = import.meta.env.OPENROUTER_URL || 'https://openrouter.ai/api/v1/chat/completions';
+    const env = (import.meta as any).env;
+    const apiKey = env.OPENROUTER_API_KEY;
+    let apiUrl = env.OPENROUTER_URL || 'https://openrouter.ai/api/v1/chat/completions';
     if (!apiUrl.endsWith('/chat/completions')) {
         apiUrl = apiUrl.replace(/\/$/, '') + '/chat/completions';
     }

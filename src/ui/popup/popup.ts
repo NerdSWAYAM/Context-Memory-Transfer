@@ -1,4 +1,5 @@
 import { ChatMessage, ConversationMetadata } from '../../shared/types';
+import { db } from '../../storage/db';
 
 let currentNativeChatId: string | null = null;
 
@@ -89,11 +90,49 @@ function setupListeners() {
   }
 
   const captureBtn = document.getElementById('capture-btn');
+  const captureStatus = document.getElementById('capture-status');
+
   if (captureBtn) {
-    captureBtn.addEventListener('click', () => {
-      alert(
-        'Capture logic running via content scripts implicitly as you browse ChatGPT!'
-      );
+    captureBtn.addEventListener('click', async () => {
+      const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (!activeTab?.id) return;
+
+      captureBtn.setAttribute('disabled', 'true');
+      captureBtn.textContent = 'Capturing…';
+      if (captureStatus) {
+        captureStatus.style.display = 'block';
+        captureStatus.textContent = 'Starting capture…';
+      }
+
+      const progressListener = (message: { type?: string; progress?: { message?: string } }) => {
+        if (message.type === 'CAPTURE_PROGRESS' && captureStatus && message.progress?.message) {
+          captureStatus.textContent = message.progress.message;
+        }
+      };
+      chrome.runtime.onMessage.addListener(progressListener);
+
+      try {
+        const response = await chrome.tabs.sendMessage(activeTab.id, { type: 'TRIGGER_CAPTURE' });
+        if (response?.success) {
+          const via = response.usedFallback ? 'DOM fallback' : 'API';
+          if (captureStatus) {
+            captureStatus.textContent = `Captured ${response.messageCount ?? 0} messages via ${via}.`;
+          }
+          await loadMessages();
+        } else {
+          const err = response?.error || 'Unknown error';
+          if (captureStatus) captureStatus.textContent = `Capture failed: ${err}`;
+        }
+      } catch {
+        if (captureStatus) {
+          captureStatus.textContent =
+            'Could not reach content script. Open a supported chat page and try again.';
+        }
+      } finally {
+        chrome.runtime.onMessage.removeListener(progressListener);
+        captureBtn.removeAttribute('disabled');
+        captureBtn.textContent = 'Capture';
+      }
     });
   }
 

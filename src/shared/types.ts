@@ -20,3 +20,20 @@ export interface ConversationMetadata {
   platform: string;
   title: string;
 }
+
+export interface NormalizedConversation {
+  id: string;
+  provider: string;
+  title: string;
+  messages: ChatMessage[];
+  capturedAt: number;
+  embedding?: number[] | null;
+}
+
+export interface ProviderAdapter {
+  provider: string;
+  detect(): boolean;
+  getConversationId(): string | null;
+  fetchFullConversation(id: string): Promise<NormalizedConversation>;
+  extractFromDom(): Promise<NormalizedConversation>;
+}

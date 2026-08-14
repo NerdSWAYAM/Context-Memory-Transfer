@@ -23,16 +23,19 @@
     },
 
     "background" : {
-        "service_worker": "src/background/index.ts"
+        "service_worker": "src/background/service-worker.ts"
     },
 
     "content_scripts": [
         {
             "matches": [
                 "https://chatgpt.com/*",
-                "https://chat.openai.com/*"
+                "https://chat.openai.com/*",
+                "https://gemini.google.com/*",
+                "https://chat.deepseek.com/*",
+                "https://claude.ai/*"
             ],
-            "js": ["src/content/capture.ts"]
+            "js": ["src/content/conversation-capture.ts"]
         }
     ],
 
@@ -41,10 +44,18 @@
         "scripting",
         "activeTab"
     ],
+
+    "host_permissions": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*",
+        "https://gemini.google.com/*",
+        "https://chat.deepseek.com/*",
+        "https://claude.ai/*"
+    ],
     
     "content_security_policy": {
         "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
     },
 
-    "author" : "Swayam Kesarkar"
+    "author" : { "email": "swayam@example.com" }
 }
