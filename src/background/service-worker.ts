@@ -92,6 +92,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           await db.conversations.update(dbId, {
             updatedAt: Date.now(),
             title: conversation.title,
+            version: (dbConv.version || 1) + 1,
           });
         } else {
           dbId = `${conversation.provider}_${generateShortId()}`;
@@ -102,6 +103,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
             title: conversation.title,
             createdAt: conversation.capturedAt,
             updatedAt: conversation.capturedAt,
+            version: 1,
           });
         }
 
@@ -149,6 +151,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
             title: meta.title,
             createdAt: Date.now(),
             updatedAt: Date.now(),
+            version: 1,
           };
           await db.conversations.add(conversation);
         }
@@ -220,10 +223,44 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         const result = await summarize(transcript, (progressMsg) => {
           chrome.runtime.sendMessage({ type: 'ML_PROGRESS', progress: progressMsg }).catch(() => {});
         });
+
+        // Save summary to conversation in Dexie DB
+        await db.conversations.update(conversation.id, {
+          summary: result,
+          updatedAt: Date.now(),
+        });
+
+        // Save summary in chrome.storage.local so it persists across sessions and tabs
+        await chrome.storage.local.set({ latest_transfer_summary: result, latest_summary_chat_id: conversation.id });
+
         sendResponse({ summary: result });
       } catch (e) {
         const errorMessage = e instanceof Error ? e.message : String(e);
         sendResponse({ error: errorMessage });
+      }
+    })();
+    return true;
+  }
+
+  if (message.type === 'GET_ALL_SUMMARIES') {
+    (async () => {
+      try {
+        const conversations = await db.conversations.toArray();
+        const withSummary = conversations
+          .filter(c => !!c.summary)
+          .sort((a, b) => b.updatedAt - a.updatedAt)
+          .map(c => ({
+            id: c.id,
+            nativeChatId: c.nativeChatId,
+            title: c.title || 'Unknown Chat',
+            updatedAt: c.updatedAt || Date.now(),
+            version: c.version || 1,
+            summary: c.summary,
+            platform: c.platform,
+          }));
+        sendResponse({ conversations: withSummary });
+      } catch (e) {
+        sendResponse({ error: String(e) });
       }
     })();
     return true;

@@ -299,8 +299,88 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return false;
   }
 
+  if (message.type === 'INJECT_AND_SEND') {
+    const text: string = message.payload?.text ?? '';
+    injectTextAndSend(text);
+    sendResponse({ success: true });
+    return false;
+  }
+
   return false;
 });
+
+/**
+ * Finds the chat input on the current page, injects the given text,
+ * and triggers the send button / Enter key.
+ */
+function injectTextAndSend(text: string): void {
+  const selectors = [
+    '#prompt-textarea',                        // ChatGPT
+    'div[contenteditable="true"].ProseMirror', // Claude
+    'div[contenteditable="true"]',             // Gemini / generic
+    'textarea',                                // DeepSeek / fallback
+  ];
+
+  let input: HTMLElement | null = null;
+  for (const sel of selectors) {
+    input = document.querySelector(sel);
+    if (input) break;
+  }
+
+  if (!input) {
+    console.error('[Transfer] Could not find chat input on this page.');
+    return;
+  }
+
+  // For contenteditable divs
+  if (input.getAttribute('contenteditable') === 'true') {
+    input.focus();
+    input.innerHTML = '';
+    const lines = text.split('\n');
+    lines.forEach((line) => {
+      const p = document.createElement('p');
+      p.textContent = line || '\u200B';
+      input!.appendChild(p);
+    });
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  } else if (input instanceof HTMLTextAreaElement) {
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+      HTMLTextAreaElement.prototype,
+      'value'
+    )?.set;
+    nativeInputValueSetter?.call(input, text);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  // Auto-send after a short delay for the framework to register the input
+  setTimeout(() => {
+    const sendSelectors = [
+      'button[data-testid="send-button"]',   // ChatGPT
+      'button[aria-label="Send Message"]',   // Claude
+      'button.send-button',                  // Gemini
+      'button[aria-label="Send"]',           // generic
+      'button[type="submit"]',               // DeepSeek / generic
+    ];
+
+    let sendBtn: HTMLButtonElement | null = null;
+    for (const sel of sendSelectors) {
+      sendBtn = document.querySelector(sel);
+      if (sendBtn) break;
+    }
+
+    if (sendBtn) {
+      sendBtn.click();
+    } else {
+      const enterEvent = new KeyboardEvent('keydown', {
+        key: 'Enter',
+        code: 'Enter',
+        bubbles: true,
+        cancelable: true,
+      });
+      input!.dispatchEvent(enterEvent);
+    }
+  }, 300);
+}
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => orchestrator.initPassiveCapture());

@@ -14,6 +14,15 @@ export class ContextMemoryDB extends Dexie {
       conversations: 'id, nativeChatId, platform, updatedAt',
       rawMessages: 'id, role, timestamp, chatId'
     });
+    this.version(3).stores({
+      conversations: 'id, nativeChatId, platform, updatedAt, version',
+      rawMessages: 'id, role, timestamp, chatId'
+    }).upgrade(tx => {
+      // Backfill version=1 for existing conversations
+      return tx.table('conversations').toCollection().modify(conv => {
+        if (!conv.version) conv.version = 1;
+      });
+    });
   }
 }
 

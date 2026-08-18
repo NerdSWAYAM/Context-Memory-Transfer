@@ -3,33 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Poké Context Memory</title>
+    <title>Poké Context Ball</title>
     <link rel="stylesheet" href="popup.css">
 </head>
-<body>
-    <div class="header">
-        <h6>Poké Context Ball</h6>
-        <div id="active-chat-title" style="font-size: 11px; color: #555; margin-bottom: 8px; font-weight: normal; font-style: italic;">Loading active chat...</div>
-        <div class="button-group">
-            <button id="capture-btn">Capture</button>
-            <button id="summarise-btn">Summarise</button>
-            <button id="clear-btn">Clear History</button>
+<body class="capture-mode">
+    <div class="popup-container">
+        <!-- Invisible tab hitzones positioned over artwork's CAPTURE / TRANSFER text -->
+        <button class="tab-hitzone tab-hitzone--capture active" id="tab-capture" aria-label="Capture tab">
+            <img src="../../assests/CAPTURE txt.png" alt="Capture txt" />
+        </button>
+        <button class="tab-hitzone tab-hitzone--transfer" id="tab-transfer" aria-label="Transfer tab">
+            <img src="../../assests/TRANSFER txt.png" alt="TRANSFER txt" />
+        </button>
+
+        <div class="logo" id="logo">
+            <img class="logo" id="logo" src="../../assests/POKe context ball LOGO.png" alt="Logo" />
         </div>
-    </div>
-    
-    <div id="capture-status" style="display: none; padding: 8px 10px; background: #e8f4fd; margin-bottom: 8px; border-radius: 4px; font-size: 12px; color: #1a5276;"></div>
 
-    <div id="summary-container" style="display: none; padding: 10px; background: #f0f0f0; margin-bottom: 10px; border-radius: 4px; font-size: 13px;">
-        <!-- ML Summary will appear here -->
-    </div>
-    
-    <div class="message-container">
-        <ul id="message-list">
-            <!-- Messages will be injected here -->
-        </ul>
+        <!-- ===== CAPTURE PANEL ===== -->
+        <div id="capture-panel" class="panel panel--capture active">
+            <!-- Pokéball — draggable via mouse events -->
+            <img class="pokeball" id="pokeball" draggable="false" alt="Poké Ball" />
+
+            <!-- Capture image-button (uses Capture.png asset) -->
+            <button id="capture-btn" class="capture-img-btn" aria-label="Capture and Summarise">
+                <img src="../../assests/Capture.png" alt="Capture" draggable="false" />
+            </button>
+
+            <!-- Status bar for capture / summarise progress -->
+            <div id="capture-status" class="status-bar" style="display: none;"></div>
+        </div>
+
+        <!-- ===== TRANSFER PANEL ===== -->
+        <div id="transfer-panel" class="panel panel--transfer">
+            <!-- Scrollable container for chat cards -->
+            <div class="transfer-cards-container" id="transfer-cards-container">
+                <p id="transfer-empty-msg" class="pixel-text--muted">No context collections yet.<br>Capture a conversation using PokeBall.</p>
+            </div>
+        </div>
+
+        <!-- Donate link (always visible) -->
+        <a href="#" class="donate-link" id="donate-link">
+            <img src="../../assests/DONATE.png" alt="Donate" draggable="false" />
+        </a>
+
+        <!-- Hidden data containers — used by JS logic, never rendered -->
+        <ul id="message-list" style="display:none;"></ul>
+        <div id="active-chat-title" style="display:none;"></div>
     </div>
 
-    <!-- Ensure type="module" is used for Vite -->
     <script type="module" src="popup.ts"></script>
 </body>
 </html>

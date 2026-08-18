@@ -57,5 +57,5 @@
         "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
     },
 
-    "author" : { "email": "swayam@example.com" }
+    "author" : { "email": "swayamkesarkar625@gmail.com" }
 }

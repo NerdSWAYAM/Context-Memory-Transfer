@@ -13,6 +13,8 @@ export interface Conversation {
   title: string;
   createdAt: number;
   updatedAt: number;
+  summary?: string;
+  version: number;
 }
 
 export interface ConversationMetadata {
