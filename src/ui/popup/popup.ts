@@ -1,6 +1,5 @@
 import { ChatMessage, ConversationMetadata } from '../../shared/types';
 import { db } from '../../storage/db';
-import borderImageUrl from '../../assests/border-sucks.png';
 
 const TRANSFER_PREFIX = `We are starting a fresh session. I am pasting the context brief from our previous conversation below. Read it to fully absorb the state of the project, adopt this context as our baseline, and wait for my next instruction without saying anything other than that you are ready.`;
 
@@ -21,7 +20,7 @@ function formatRelativeTime(timestamp: number): string {
   if (days > 10) {
     const d = new Date(timestamp);
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return `${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
   }
   if (days > 0) return `${days}d ago`;
@@ -55,6 +54,9 @@ function setupTabs() {
     capturePanel.classList.remove('active');
     document.body.classList.add('transfer-mode');
     document.body.classList.remove('capture-mode');
+    
+    // Refresh the transfer cards when switching to the tab
+    loadAllSummaries();
   });
 }
 
@@ -192,15 +194,7 @@ function createCardElement(card: CardData): HTMLButtonElement {
   btn.className = 'transfer-card';
   btn.setAttribute('aria-label', `Transfer: ${card.title}`);
 
-  // Border image
-  const borderImg = document.createElement('img');
-  borderImg.className = 'transfer-card__border';
-  // Ensure we strip the leading slash from the Vite asset URL before passing to getURL
-  borderImg.src = chrome.runtime.getURL(borderImageUrl.startsWith('/') ? borderImageUrl.slice(1) : borderImageUrl);
-  borderImg.alt = '';
-  borderImg.draggable = false;
-
-  // Content overlay
+  // Content container
   const content = document.createElement('div');
   content.className = 'transfer-card__content';
 
@@ -224,7 +218,6 @@ function createCardElement(card: CardData): HTMLButtonElement {
   content.appendChild(titleEl);
   content.appendChild(metaRow);
 
-  btn.appendChild(borderImg);
   btn.appendChild(content);
 
   // Click → transfer this conversation's summary
@@ -311,6 +304,17 @@ async function handleCardClick(conversationId: string) {
 
 // ── Setup all button listeners ─────────────────────────────────────────────
 function setupListeners() {
+  // ── Refresh button: reload transfer cards ──────────────────────────
+  const refreshBtn = document.getElementById('refresh-transfer-btn');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', async () => {
+      const originalText = refreshBtn.textContent;
+      refreshBtn.textContent = '...';
+      await loadAllSummaries();
+      refreshBtn.textContent = originalText;
+    });
+  }
+
   // ── Capture button: capture transcript → auto-summarise → save to Transfer tab
   const captureBtn = document.getElementById('capture-btn');
   const captureStatus = document.getElementById('capture-status');
@@ -319,6 +323,23 @@ function setupListeners() {
     captureBtn.addEventListener('click', async () => {
       const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
       if (!activeTab?.id) return;
+
+      const url = activeTab.url || '';
+      const isSupported = [
+        'chatgpt.com',
+        'chat.openai.com',
+        'gemini.google.com',
+        'chat.deepseek.com',
+        'claude.ai'
+      ].some(domain => url.includes(domain));
+
+      if (!isSupported) {
+        if (captureStatus) {
+          captureStatus.style.display = 'block';
+          captureStatus.textContent = 'Capture failed: Please open a supported chat page (ChatGPT, Claude, Gemini, DeepSeek).';
+        }
+        return;
+      }
 
       captureBtn.setAttribute('disabled', 'true');
       if (captureStatus) {
@@ -375,10 +396,15 @@ function setupListeners() {
           const err = response?.error || 'Unknown error';
           if (captureStatus) captureStatus.textContent = `Capture failed: ${err}`;
         }
-      } catch {
+      } catch (err: any) {
         if (captureStatus) {
-          captureStatus.textContent =
-            'Could not reach content script. Open a supported chat page and try again.';
+          const errMsg = err?.message || '';
+          if (errMsg.includes('Receiving end does not exist') || errMsg.includes('establish connection')) {
+            captureStatus.textContent =
+              'Connection failed. Please refresh the chat page and try again.';
+          } else {
+            captureStatus.textContent = `Capture error: ${errMsg || 'Could not reach content script.'}`;
+          }
         }
       } finally {
         chrome.runtime.onMessage.removeListener(progressListener);

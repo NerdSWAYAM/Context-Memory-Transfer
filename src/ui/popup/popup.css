@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
 @font-face {
     font-family: 'GeistPixel';
     src: url('/node_modules/geist/dist/fonts/geist-pixel/GeistPixel-Square.woff2') format('woff2');
@@ -8,14 +9,17 @@
 }
 
 /* ── Reset ──────────────────────────────────────────────────────────────── */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
 /* ── Base ───────────────────────────────────────────────────────────────── */
-html, body {
+html,
+body {
     width: 300px;
     height: 400px;
     overflow: hidden;
@@ -135,7 +139,7 @@ body.transfer-mode .popup-container {
 }
 
 /* Allow children to receive pointer events */
-.panel > * {
+.panel>* {
     pointer-events: auto;
 }
 
@@ -158,15 +162,13 @@ body.transfer-mode .popup-container {
 
 .pokeball:hover {
     transform: translateX(-50%) scale(1.07);
-    filter: drop-shadow(0 5px 14px rgba(255, 255, 255, 0.12))
-            drop-shadow(0 3px 8px rgba(0, 0, 0, 0.65));
+    filter: drop-shadow(0 5px 14px rgba(255, 255, 255, 0.12)) drop-shadow(0 3px 8px rgba(0, 0, 0, 0.65));
 }
 
 .pokeball.dragging {
     cursor: grabbing;
     z-index: 20;
-    filter: drop-shadow(0 8px 24px rgba(255, 255, 255, 0.2))
-            drop-shadow(0 4px 12px rgba(0, 0, 0, 0.75));
+    filter: drop-shadow(0 8px 24px rgba(255, 255, 255, 0.2)) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.75));
     transition: filter 0.08s ease;
 }
 
@@ -235,10 +237,10 @@ body.transfer-mode .popup-container {
 /* ── Transfer Cards Container ──────────────────────────────────────────── */
 .transfer-cards-container {
     position: absolute;
-    top: 18%;
+    top: 25%;
     left: 6%;
     width: 88%;
-    height: 62%;
+    height: 58%;
     overflow-y: auto;
     overflow-x: hidden;
     padding: 4px 2px;
@@ -249,7 +251,7 @@ body.transfer-mode .popup-container {
 }
 
 .transfer-cards-container::-webkit-scrollbar {
-    width: 4px;
+    width: 16px;
 }
 
 .transfer-cards-container::-webkit-scrollbar-track {
@@ -257,12 +259,45 @@ body.transfer-mode .popup-container {
 }
 
 .transfer-cards-container::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 2px;
+    background: url('../../assests/poke-scroll.png') center center no-repeat;
+    background-size: contain;
+    min-height: 16px;
+    image-rendering: pixelated;
+    border-radius: 0;
 }
 
 .transfer-cards-container::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: url('../../assests/poke-scroll.png') center center no-repeat;
+    background-size: contain;
+    filter: brightness(1.2);
+}
+
+/* ── Refresh Button ─────────────────────────────────────────────────────── */
+.refresh-btn {
+    position: absolute;
+    top: 5%;
+    right: 6%;
+    background: transparent;
+    border: 1px solid #9146FF;
+    color: #9146FF;
+    font-family: 'VT323', monospace;
+    font-size: 14px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 10;
+    transition: transform 0.1s ease, background 0.1s ease, color 0.1s ease;
+}
+
+.refresh-btn:hover {
+    background: #9146FF;
+    color: #0e0e12;
+    transform: translate(-1px, -1px);
+    box-shadow: 1px 1px 0px #fff;
+}
+
+.refresh-btn:active {
+    transform: scale(0.95);
 }
 
 /* ── Empty state muted text ─────────────────────────────────────────────── */
@@ -280,40 +315,31 @@ body.transfer-mode .popup-container {
 .transfer-card {
     display: block;
     width: 100%;
-    position: relative;
-    background: none;
+    background: url('../../assests/border-sucks.png') no-repeat center center;
+    background-size: 100% 100%;
     border: none;
     cursor: pointer;
-    padding: 0;
+    padding: 30px 16px;
     outline: none;
     -webkit-tap-highlight-color: transparent;
     transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.15s ease;
     flex-shrink: 0;
-}
-
-.transfer-card__border {
-    display: block;
-    width: 100%;
+    text-align: left;
+    font-family: 'GeistPixel', 'VT323', monospace;
     image-rendering: pixelated;
-    pointer-events: none;
 }
 
 .transfer-card__content {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 10px 16px;
     pointer-events: none;
 }
 
 .transfer-card__title {
     font-family: 'GeistPixel', 'VT323', monospace;
-    font-size: 12px;
+    font-size: 18px;
+    font-weight: bolder;
     color: #fff;
     text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.7);
     white-space: nowrap;
@@ -331,16 +357,16 @@ body.transfer-mode .popup-container {
 
 .transfer-card__date {
     font-family: 'GeistPixel', 'VT323', monospace;
-    font-size: 10px;
+    font-size: 18px;
     color: rgba(255, 255, 255, 0.5);
     text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.5);
 }
 
 .transfer-card__version {
     font-family: 'GeistPixel', 'VT323', monospace;
-    font-size: 10px;
-    color: #9146FF;
-    text-shadow: 0 0 4px rgba(145, 70, 255, 0.4);
+    font-size: 18px;
+    color: #a195b4c5;
+    text-shadow: 0 0 4px rgba(15, 15, 15, 0.8);
 }
 
 .transfer-card:hover {

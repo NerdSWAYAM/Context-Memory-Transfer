@@ -50,7 +50,8 @@
         "https://chat.openai.com/*",
         "https://gemini.google.com/*",
         "https://chat.deepseek.com/*",
-        "https://claude.ai/*"
+        "https://claude.ai/*",
+        "https://openrouter.ai/*"
     ],
     
     "content_security_policy": {
