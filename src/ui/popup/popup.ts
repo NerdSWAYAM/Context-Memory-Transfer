@@ -54,57 +54,57 @@ function setupTabs() {
     capturePanel.classList.remove('active');
     document.body.classList.add('transfer-mode');
     document.body.classList.remove('capture-mode');
-    
+
     // Refresh the transfer cards when switching to the tab
     loadAllSummaries();
   });
 }
 
 // ── Pokéball drag interaction ──────────────────────────────────────────────
-function setupPokeball() {
-  const pokeball = document.getElementById('pokeball') as HTMLImageElement;
-  if (!pokeball) return;
+// function setupPokeball() {
+//   const pokeball = document.getElementById('pokeball') as HTMLImageElement;
+//   if (!pokeball) return;
 
-  // Load pokeball image from extension public assets
-  pokeball.src = chrome.runtime.getURL('icons/pokeball.png');
+//   // Load pokeball image from extension public assets
+//   pokeball.src = chrome.runtime.getURL('icons/pokeball.png');
 
-  let isDragging = false;
-  let startX = 0;
-  let startY = 0;
+//   let isDragging = false;
+//   let startX = 0;
+//   let startY = 0;
 
-  pokeball.addEventListener('mousedown', (e: MouseEvent) => {
-    isDragging = true;
-    startX = e.clientX;
-    startY = e.clientY;
-    pokeball.classList.add('dragging');
-    // Remove default transition so drag feels immediate
-    pokeball.style.transition = 'filter 0.08s ease';
-    e.preventDefault();
-  });
+//   pokeball.addEventListener('mousedown', (e: MouseEvent) => {
+//     isDragging = true;
+//     startX = e.clientX;
+//     startY = e.clientY;
+//     pokeball.classList.add('dragging');
+//     // Remove default transition so drag feels immediate
+//     pokeball.style.transition = 'filter 0.08s ease';
+//     e.preventDefault();
+//   });
 
-  document.addEventListener('mousemove', (e: MouseEvent) => {
-    if (!isDragging) return;
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
-    pokeball.style.transform =
-      `translateX(calc(-50% + ${dx}px)) translateY(${dy}px) scale(1.1)`;
-  });
+//   document.addEventListener('mousemove', (e: MouseEvent) => {
+//     if (!isDragging) return;
+//     const dx = e.clientX - startX;
+//     const dy = e.clientY - startY;
+//     pokeball.style.transform =
+//       `translateX(calc(-50% + ${dx}px)) translateY(${dy}px) scale(1.1)`;
+//   });
 
-  document.addEventListener('mouseup', () => {
-    if (!isDragging) return;
-    isDragging = false;
-    pokeball.classList.remove('dragging');
+//   document.addEventListener('mouseup', () => {
+//     if (!isDragging) return;
+//     isDragging = false;
+//     pokeball.classList.remove('dragging');
 
-    // Bounce back to original position with spring easing
-    pokeball.style.transition =
-      'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s ease';
-    pokeball.style.transform = 'translateX(-50%)';
+//     // Bounce back to original position with spring easing
+//     pokeball.style.transition =
+//       'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s ease';
+//     pokeball.style.transform = 'translateX(-50%)';
 
-    setTimeout(() => {
-      pokeball.style.transition = '';
-    }, 450);
-  });
-}
+//     setTimeout(() => {
+//       pokeball.style.transition = '';
+//     }, 450);
+//   });
+// }
 
 // ── Load messages into hidden data list ────────────────────────────────────
 async function loadMessages() {
@@ -302,6 +302,53 @@ async function handleCardClick(conversationId: string) {
   }
 }
 
+// ── Pokéball capture animation state ───────────────────────────────────────
+const POKEBALL_ANIMATION = {
+  OPEN_MS: 500,
+  GOTCHA_MS: 820,
+} as const;
+
+type PokeballState = 'idle' | 'open' | 'rock';
+
+function setPokeballState(state: PokeballState) {
+  const ball = document.getElementById('pokeball-sprite');
+  if (!ball) return;
+
+  ball.classList.remove('idle', 'open', 'rock', 'bounce');
+  ball.classList.add(state);
+}
+
+function showGotchaEffect() {
+  const effect = document.getElementById('capture-gotcha');
+  if (!effect) return;
+
+  effect.classList.remove('is-visible');
+  // Force a reflow so every capture reliably replays the effect.
+  void effect.offsetWidth;
+  effect.classList.add('is-visible');
+
+  window.setTimeout(() => {
+    effect.classList.remove('is-visible');
+  }, POKEBALL_ANIMATION.GOTCHA_MS);
+}
+
+function sleep(ms: number) {
+  return new Promise<void>(resolve => window.setTimeout(resolve, ms));
+}
+
+async function playCaptureStartSequence() {
+  setPokeballState('open');
+  await sleep(POKEBALL_ANIMATION.OPEN_MS);
+  setPokeballState('rock');
+}
+
+function finishCaptureSequence() {
+  showGotchaEffect();
+  window.setTimeout(() => {
+    setPokeballState('idle');
+  }, POKEBALL_ANIMATION.GOTCHA_MS);
+}
+
 // ── Setup all button listeners ─────────────────────────────────────────────
 function setupListeners() {
   // ── Refresh button: reload transfer cards ──────────────────────────
@@ -336,40 +383,39 @@ function setupListeners() {
       if (!isSupported) {
         if (captureStatus) {
           captureStatus.style.display = 'block';
+          captureStatus.classList.add('status-bar--error');
           captureStatus.textContent = 'Capture failed: Please open a supported chat page (ChatGPT, Claude, Gemini, DeepSeek).';
         }
         return;
       }
 
       captureBtn.setAttribute('disabled', 'true');
+
+      // Start the visual sequence immediately. The rock state is intentionally
+      // held until the complete capture + summary backend flow finishes.
+      const animationSequence = playCaptureStartSequence();
+      let captureSucceeded = false;
+
       if (captureStatus) {
-        captureStatus.style.display = 'block';
-        captureStatus.textContent = 'Starting capture…';
+        captureStatus.style.display = 'none';
+        captureStatus.classList.remove('status-bar--error');
+        captureStatus.textContent = '';
       }
 
       const progressListener = (message: { type?: string; progress?: { message?: string } }) => {
-        if (message.type === 'CAPTURE_PROGRESS' && captureStatus && message.progress?.message) {
-          captureStatus.textContent = message.progress.message;
-        }
+        // Success progress messages removed as per user request
       };
       chrome.runtime.onMessage.addListener(progressListener);
 
       try {
         const response = await chrome.tabs.sendMessage(activeTab.id, { type: 'TRIGGER_CAPTURE' });
         if (response?.success) {
-          const via = response.usedFallback ? 'DOM fallback' : 'API';
-          if (captureStatus) {
-            captureStatus.textContent = `Captured ${response.messageCount ?? 0} messages via ${via}. Summarising…`;
-          }
           await loadMessages();
 
           // ── Auto-summarise after capture ────────────────────────────
-          if (captureStatus) captureStatus.textContent = 'Generating summary…';
 
           const mlListener = (message: any) => {
-            if (message.type === 'ML_PROGRESS' && captureStatus) {
-              captureStatus.textContent = message.progress;
-            }
+            // ML progress messages removed as per user request
           };
           chrome.runtime.onMessage.addListener(mlListener);
 
@@ -380,24 +426,44 @@ function setupListeners() {
             });
 
             if (sumResponse.error) {
-              if (captureStatus) captureStatus.textContent = `Summary error: ${sumResponse.error}`;
+              if (captureStatus) {
+                captureStatus.style.display = 'block';
+                captureStatus.classList.add('status-bar--error');
+                captureStatus.textContent = `Summary error: ${sumResponse.error}`;
+              }
             } else if (sumResponse.summary) {
               // Refresh the transfer cards to show the new/updated entry
               await loadAllSummaries();
-              if (captureStatus) captureStatus.textContent = 'Done! Summary saved to Transfer tab.';
+              // if (captureStatus) captureStatus.textContent = 'Done! Summary saved to Transfer tab.';
+
+              captureSucceeded = true;
+
+              // Do not show GOTCHA until every backend step above has completed.
+              await animationSequence;
+              finishCaptureSequence();
             }
           } catch (sumErr: any) {
             const msg = sumErr?.message ? String(sumErr.message) : String(sumErr);
-            if (captureStatus) captureStatus.textContent = `Summary error: ${msg}`;
+            if (captureStatus) {
+              captureStatus.style.display = 'block';
+              captureStatus.classList.add('status-bar--error');
+              captureStatus.textContent = `Summary error: ${msg}`;
+            }
           } finally {
             chrome.runtime.onMessage.removeListener(mlListener);
           }
         } else {
           const err = response?.error || 'Unknown error';
-          if (captureStatus) captureStatus.textContent = `Capture failed: ${err}`;
+          if (captureStatus) {
+            captureStatus.style.display = 'block';
+            captureStatus.classList.add('status-bar--error');
+            captureStatus.textContent = `Capture failed: ${err}`;
+          }
         }
       } catch (err: any) {
         if (captureStatus) {
+          captureStatus.style.display = 'block';
+          captureStatus.classList.add('status-bar--error');
           const errMsg = err?.message || '';
           if (errMsg.includes('Receiving end does not exist') || errMsg.includes('establish connection')) {
             captureStatus.textContent =
@@ -409,6 +475,13 @@ function setupListeners() {
       } finally {
         chrome.runtime.onMessage.removeListener(progressListener);
         captureBtn.removeAttribute('disabled');
+
+        // If capture/summary failed, still complete the 0.5s open phase and
+        // then return to idle so the Pokéball can never remain stuck rocking.
+        if (!captureSucceeded) {
+          await animationSequence;
+          setPokeballState('idle');
+        }
       }
     });
   }
@@ -494,7 +567,7 @@ function injectTextIntoPage(text: string) {
 // ── Init ───────────────────────────────────────────────────────────────────
 async function init() {
   setupTabs();
-  setupPokeball();
+  setPokeballState('idle');
   await loadAllSummaries();
   await loadMessages();
   setupListeners();

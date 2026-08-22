@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Poké Context Ball</title>
     <link rel="stylesheet" href="popup.css">
 </head>
+
 <body class="capture-mode">
     <div class="popup-container">
         <!-- Invisible tab hitzones positioned over artwork's CAPTURE / TRANSFER text -->
@@ -23,7 +25,20 @@
         <!-- ===== CAPTURE PANEL ===== -->
         <div id="capture-panel" class="panel panel--capture active">
             <!-- Pokéball — draggable via mouse events -->
-            <img class="pokeball" id="pokeball" draggable="false" alt="Poké Ball" />
+            <div id="pokeball" class="pokeball-container" aria-hidden="true">
+                <div style="transform: scale(4.4); transform-origin: center bottom;">
+                    <div class="poke ball" id="pokeball-sprite"></div>
+                </div>
+            </div>
+
+            <!-- Capture-complete flourish. Hidden until the summary backend finishes. -->
+            <div id="capture-gotcha" class="capture-gotcha" aria-hidden="true">
+                <span class="capture-gotcha__spark capture-gotcha__spark--1"></span>
+                <span class="capture-gotcha__spark capture-gotcha__spark--2"></span>
+                <span class="capture-gotcha__spark capture-gotcha__spark--3"></span>
+                <span class="capture-gotcha__spark capture-gotcha__spark--4"></span>
+                <span class="capture-gotcha__text">GOTCHA!</span>
+            </div>
 
             <!-- Capture image-button (uses Capture.png asset) -->
             <button id="capture-btn" class="capture-img-btn" aria-label="Capture and Summarise">
@@ -40,7 +55,8 @@
             <!-- <button id="refresh-transfer-btn" class="refresh-btn" aria-label="Refresh list">↻</button> -->
             <!-- Scrollable container for chat cards -->
             <div class="transfer-cards-container" id="transfer-cards-container">
-                <p id="transfer-empty-msg" class="pixel-text--muted">No context collections yet.<br>Capture a conversation using PokeBall.</p>
+                <p id="transfer-empty-msg" class="pixel-text--muted">No context collections yet.<br>Capture a
+                    conversation using PokeBall.</p>
             </div>
         </div>
 
@@ -56,4 +72,5 @@
 
     <script type="module" src="popup.ts"></script>
 </body>
+
 </html>

@@ -143,33 +143,18 @@ body.transfer-mode .popup-container {
     pointer-events: auto;
 }
 
-/* ── Pokéball ───────────────────────────────────────────────────────────── */
-.pokeball {
+/* ── Pokéball Container ─────────────────────────────────────────────────── */
+.pokeball-container {
     position: absolute;
-    top: 27%;
+    top: 50%;
     left: 50%;
     transform: translateX(-50%);
-    width: 110px;
-    height: 110px;
-    image-rendering: pixelated;
-    cursor: grab;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     z-index: 5;
-    transition: transform 0.2s ease, filter 0.2s ease;
-    filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.55));
-    user-select: none;
-    -webkit-user-drag: none;
-}
-
-.pokeball:hover {
-    transform: translateX(-50%) scale(1.07);
-    filter: drop-shadow(0 5px 14px rgba(255, 255, 255, 0.12)) drop-shadow(0 3px 8px rgba(0, 0, 0, 0.65));
-}
-
-.pokeball.dragging {
-    cursor: grabbing;
-    z-index: 20;
-    filter: drop-shadow(0 8px 24px rgba(255, 255, 255, 0.2)) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.75));
-    transition: filter 0.08s ease;
+    pointer-events: none;
 }
 
 /* ── Capture Image Button ───────────────────────────────────────────────── */
@@ -232,6 +217,14 @@ body.transfer-mode .popup-container {
     text-shadow: 0 0 6px rgba(74, 222, 128, 0.4);
     z-index: 6;
     image-rendering: auto;
+}
+
+.status-bar--error {
+    background: rgba(22, 6, 6, 0.9);
+    border: 2px solid #a32a2a;
+    color: #ff5353;
+    text-shadow: 0 0 6px rgba(255, 83, 83, 0.4);
+    font-family: 'GeistPixel', 'VT323', monospace;
 }
 
 /* ── Transfer Cards Container ──────────────────────────────────────────── */
@@ -411,4 +404,229 @@ body.transfer-mode .popup-container {
 .error {
     color: #f87171;
     font-style: italic;
+}
+
+
+
+/* ── Animated Pokéball ─────────────────────────────────────────────────── */
+.ball,
+.ball .sprite {
+    width: 41px;
+    height: 41px;
+    background-image: url("../../assests/pokeballs.png");
+    background-repeat: no-repeat;
+    background-position: 0 0;
+    transform-origin: center bottom;
+    position: relative;
+    display: inline-block;
+    image-rendering: pixelated;
+    will-change: background-position, transform;
+}
+
+.ball {
+    margin: 10px;
+    bottom: -9px;
+}
+
+.ball::before {
+    content: "";
+    position: absolute;
+    left: 30%;
+    bottom: 8px;
+    width: 40%;
+    height: 3px;
+    border-radius: 100%;
+    background: black;
+    box-shadow: 0 1px 2px black;
+    opacity: 0.3;
+}
+
+.poke.ball,
+.poke.ball .sprite {
+    background-position-x: 0;
+}
+
+/* Idle state */
+.ball.idle {
+    background-position-y: 0;
+    animation: none;
+    transform: none;
+}
+
+.ball.idle::before {
+    opacity: 0.3;
+    transform: none;
+    animation: none;
+}
+
+/* Open frame from the Pokéball sprite sheet. */
+.ball.open {
+    background-position-y: -401.5px;
+    animation: pokeball-open-glow 0.5s steps(1) forwards;
+}
+
+/* Rock animation from the sprite sheet. Kept infinite while backend work runs. */
+.ball.rock {
+    animation: ball-rock 1.22s steps(1) infinite;
+}
+
+.ball.rock::before {
+    animation: rock-shadow 1.22s ease-in-out infinite;
+}
+
+@keyframes pokeball-open-glow {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.35) drop-shadow(0 0 5px rgba(255,255,255,.45)); }
+}
+
+@keyframes ball-rock {
+    0% { background-position-y: 0; }
+    8.33% { background-position-y: -440px; }
+    16.66% { background-position-y: -480px; }
+    25% { background-position-y: -520px; }
+    33.33% { background-position-y: -480px; }
+    41.66% { background-position-y: -440px; }
+    50% { background-position-y: 0; }
+    58.33% { background-position-y: -560px; }
+    66.66% { background-position-y: -600px; }
+    75% { background-position-y: -640px; }
+    83.33% { background-position-y: -600px; }
+    91.66% { background-position-y: -560px; }
+    100% { background-position-y: 0; }
+}
+
+@keyframes rock-shadow {
+    0%, 50%, 100% {
+        opacity: .22;
+        transform: scaleX(1);
+    }
+    25%, 75% {
+        opacity: .42;
+        transform: scaleX(.82);
+    }
+}
+
+/* ── Capture complete / GOTCHA flourish ─────────────────────────────────── */
+.capture-gotcha {
+    position: absolute;
+    top: 49%;
+    left: 50%;
+    width: 150px;
+    height: 86px;
+    transform: translate(-50%, -50%) scale(.55);
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 7;
+}
+
+.capture-gotcha.is-visible {
+    animation: gotcha-pop 0.82s cubic-bezier(.18,.88,.32,1) forwards;
+}
+
+.capture-gotcha__text {
+    position: relative;
+    z-index: 2;
+    color: #fff;
+    font-family: 'GeistPixel', 'VT323', monospace;
+    font-size: 30px;
+    letter-spacing: 2px;
+    text-shadow:
+        2px 2px 0 #111,
+        -1px -1px 0 #111,
+        0 0 8px rgba(255,255,255,.7);
+}
+
+.capture-gotcha__spark {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 4px;
+    height: 28px;
+    transform-origin: 50% 65px;
+    border-radius: 2px;
+    background: #fff;
+    box-shadow: 0 0 6px rgba(255,255,255,.9);
+    opacity: 0;
+}
+
+.capture-gotcha__spark--1 { transform: translate(-50%, -50%) rotate(0deg); }
+.capture-gotcha__spark--2 { transform: translate(-50%, -50%) rotate(45deg); }
+.capture-gotcha__spark--3 { transform: translate(-50%, -50%) rotate(90deg); }
+.capture-gotcha__spark--4 { transform: translate(-50%, -50%) rotate(135deg); }
+
+.capture-gotcha.is-visible .capture-gotcha__spark {
+    animation: gotcha-spark 0.55s ease-out forwards;
+}
+
+@keyframes gotcha-pop {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(.55) rotate(-5deg);
+    }
+    25% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.12) rotate(2deg);
+    }
+    55% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(.96) rotate(-1deg);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.18) rotate(0deg);
+    }
+}
+
+@keyframes gotcha-spark {
+    0% {
+        opacity: 0;
+        transform-origin: 50% 65px;
+        scale: .35;
+    }
+    20% { opacity: 1; }
+    100% {
+        opacity: 0;
+        scale: 1;
+    }
+}
+
+/* Existing bounce animation retained for any future use. */
+.ball.bounce {
+    animation: bounce 1s ease infinite;
+}
+
+.ball.bounce::before {
+    animation: bounce-shadow 1s ease infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0) scaleY(.75) scaleX(1.15);
+    animation-timing-function: ease-in;
+  }
+  10% {
+    transform: translateY(-10%) scaleY(1) scaleX(1);
+    animation-timing-function: ease-out;
+  }
+  50% {
+    transform: translateY(-50%) scaleY(1.1) scaleX(.95);
+    animation-timing-function: ease-in;
+  }
+  90% {
+    transform: translateY(-10%) scaleY(1) scaleX(1);
+    animation-timing-function: ease-out;
+  }
+}
+
+@keyframes bounce-shadow {
+  0%, 100% {
+    opacity: .4;
+    transform: translateY(0) scaleY(1) scaleX(1);
+  }
+  10%, 90% {
+    opacity: 0;
+    transform: translateY(200%) scaleY(.3) scaleX(.3);
+  }
 }
