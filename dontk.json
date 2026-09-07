@@ -1,0 +1,851 @@
+You are receiving a transferred conversation from another model. Do NOT answer or continue the conversation now. Instead, reply only with a short acknowledgement that you have received the conversation and are ready to proceed, for example: "I understand and I'm ready to proceed."
+
+Transferred conversation:
+
+Assistant: Use this as the context/specification for the extractive summarization approach in your experimental project:
+
+EXTRACTIVE CONTEXT SUMMARIZATION METHOD
+
+Goal:
+Build a lightweight, fully local summarization system for Poké Context Memory
+without using an LLM, GPU, backend, or external API.
+
+Input:
+A long AI chat transcript containing USER and ASSISTANT messages.
+
+Pipeline:
+1. Extract and normalize conversation messages.
+2. Remove obvious noise such as UI text, duplicate content, and unnecessary filler.
+3. Split messages into meaningful sentences/segments.
+4. Calculate importance for each sentence/message using lightweight signals:
+ - TF-IDF relevance
+ - TextRank/graph centrality
+ - keyword/phrase importance
+ - recency
+ - message position
+ - technical/decision signals
+5. Build a similarity graph between sentences/messages.
+6. Use TextRank to identify central/high-value information.
+7. Remove redundant or highly similar selected content.
+8. Assign selected information to the appropriate context category.
+9. Preserve chronological order where order is important.
+10. Generate the final compact context.
+
+Context categories:
+- USER GOAL
+- CRITICAL REQUIREMENTS
+- IMPORTANT DECISIONS
+- CONSTRAINTS
+- TECHNICAL CONTEXT
+- CURRENT STATE
+- FAILED APPROACHES
+- SOLUTIONS
+- OPEN ISSUES
+- NEXT STEPS
+
+Important rules:
+- Preserve information required for another AI to continue the work.
+- Preserve decisions, constraints, current state, failures, and unresolved work.
+- Preserve technical details when they affect implementation or decisions.
+- Preserve the latest confirmed requirement when requirements change.
+- Do not invent, infer, or hallucinate information.
+- Remove repetition and conversational filler.
+- Do not optimize for compression at the expense of critical information.
+- Keep the original meaning of extracted content because this is extractive summarization.
+
+Importance scoring concept:
+
+Final Score =
+ TF-IDF relevance
+ + TextRank centrality
+ + important-keyword score
+ + decision/requirement signal
+ + technical-detail signal
+ + recency score
+ - redundancy penalty
+
+Example important signals:
+"must", "requirement", "decided", "changed", "error",
+"failed", "solution", "constraint", "current", "working",
+"TODO", "next", "important"
+
+Output:
+A compact structured context that contains the most useful information
+from the conversation while retaining source wording wherever possible.
+
+Primary evaluation metrics:
+- Critical information retention
+- Correctness
+- Decision preservation
+- Constraint preservation
+- Current-state preservation
+- Failed-approach preservation
+- Open-issue preservation
+- Redundancy reduction
+- Compression ratio
+- Usefulness to a new AI
+- Processing time
+- Memory/CPU usage
+
+Design goal:
+The summarizer should behave as a lightweight context extraction and
+ranking engine, not as a generic text summarizer.
+
+For your experimental page, the core algorithm is essentially:
+
+Chat
+ ↓
+Clean
+ ↓
+Segment
+ ↓
+TF-IDF
+ ↓
+Similarity Graph
+ ↓
+TextRank
+ ↓
+Importance Scoring
+ ↓
+Redundancy Removal
+ ↓
+Category Assignment
+ ↓
+Portable Context
+
+This gives you a clear baseline that you can later improve with semantic embeddings or a small specialized model without changing the overall architecture.
+
+User: now explain me this structured architechture step by step, so that i'll note down and write it mean time
+
+Assistant: Absolutely. Treat this as the technical design of your extractive summarization engine. You can write it down section by section.
+
+1. Overall idea
+
+The purpose is not to generate new sentences like an LLM.
+
+Instead, we want to:
+
+Find the most important parts of a conversation, remove repetition, and organize the selected information into useful context.
+
+So the complete pipeline is:
+
+Chat Transcript
+ ↓
+1. Clean & Normalize
+ ↓
+2. Segment Messages
+ ↓
+3. Calculate TF-IDF
+ ↓
+4. Calculate Sentence Similarity
+ ↓
+5. Build Similarity Graph
+ ↓
+6. TextRank
+ ↓
+7. Additional Importance Scoring
+ ↓
+8. Remove Redundancy
+ ↓
+9. Assign Context Categories
+ ↓
+10. Preserve Important Order
+ ↓
+11. Final Structured Context
+
+2. Step 1 — Chat extraction
+
+First we need the actual conversation.
+
+For example:
+
+USER:
+I want to build a browser extension.
+
+ASSISTANT:
+You can use JavaScript and WebExtensions.
+
+USER:
+It must work offline.
+
+ASSISTANT:
+Then local processing would be useful.
+
+Your extension's content script will eventually extract this from ChatGPT, Claude, Gemini, etc.
+
+For now, your experimental page can simply accept pasted text.
+
+Input representation
+
+Internally, don't treat everything as one huge string.
+
+Represent it like:
+
+JavaScript
+
+[
+ {
+ role: "user",
+ text: "I want to build a browser extension."
+ },
+ {
+ role: "assistant",
+ text: "You can use JavaScript and WebExtensions."
+ },
+ {
+ role: "user",
+ text: "It must work offline."
+ }
+]
+
+This becomes important later because USER messages and ASSISTANT messages have different importance characteristics.
+
+3. Step 2 — Cleaning and normalization
+
+Raw AI chats contain unnecessary information.
+
+For example:
+
+User:
+Hey, thanks!
+
+Assistant:
+You're welcome! 😊
+
+User:
+Okay, so as I was saying...
+
+These don't contribute much to project context.
+
+We perform lightweight preprocessing:
+
+Raw conversation
+ ↓
+Remove UI/system noise
+ ↓
+Normalize whitespace
+ ↓
+Remove obvious duplicates
+ ↓
+Preserve actual content
+
+Don't over-clean
+
+This is important.
+
+You shouldn't aggressively remove sentences just because they look casual.
+
+For example:
+
+"No, I don't want React. Let's use vanilla JavaScript."
+
+That sounds conversational, but it contains a critical decision.
+
+So cleaning should remove:
+
+"Thanks!"
+"Okay!"
+"Sure."
+"You're welcome."
+
+but preserve:
+
+"No, don't use React."
+"Let's switch to Firefox."
+"The previous approach failed."
+"I need this to work offline."
+
+4. Step 3 — Segment the conversation
+
+Now divide the conversation into smaller units.
+
+There are two useful levels:
+
+Conversation
+ ↓
+Messages
+ ↓
+Sentences
+
+Example:
+
+USER message:
+"I want to build an extension. It must work offline and support Firefox."
+
+becomes:
+
+S1 = "I want to build an extension."
+S2 = "It must work offline."
+S3 = "It must support Firefox."
+
+Why?
+
+Because we may want to keep S2 and S3 while removing S1.
+
+But don't destroy message information
+
+Keep metadata:
+
+JavaScript
+
+{
+ id: 15,
+ role: "user",
+ messageId: 7,
+ text: "It must work offline.",
+ position: 15
+}
+
+This lets you later reconstruct chronology.
+
+5. Step 4 — TF-IDF
+
+Now we need to determine which words are informative.
+
+TF-IDF stands for:
+
+Term Frequency – Inverse Document Frequency
+
+The intuition is:
+
+A word is important when it appears frequently in a particular sentence/document but isn't common everywhere.
+
+For example:
+
+"The extension uses JavaScript and JavaScript is lightweight."
+
+Words like:
+
+extension
+JavaScript
+lightweight
+
+are potentially useful.
+
+Common words such as:
+
+the
+is
+and
+it
+
+get very low importance.
+
+TF
+
+Term Frequency asks:
+
+How frequently does this word occur in this piece of text?
+
+IDF
+
+Inverse Document Frequency asks:
+
+How rare is this word across the conversation?
+
+So a word appearing everywhere is less useful.
+
+6. Step 5 — Sentence similarity
+
+Now each sentence has a numerical representation.
+
+For example:
+
+S1 = "The extension uses JavaScript."
+S2 = "We should build the extension using JavaScript."
+
+Their TF-IDF vectors will be somewhat similar.
+
+We calculate:
+
+Cosine similarity
+
+Conceptually:
+
+Similarity(S1, S2) = 0.86
+
+while:
+
+Similarity(S1, S8) = 0.05
+
+means S1 and S8 are almost unrelated.
+
+You can visualize this as:
+
+S1 ───── 0.86 ───── S2
+
+S1 ───── 0.05 ───── S8
+
+7. Step 6 — Build the similarity graph
+
+Now every sentence becomes a node.
+
+Similar sentences are connected by weighted edges.
+
+Example:
+
+ S1
+ / \
+ 0.8/ \0.6
+ / \
+ S2 -------- S3
+ 0.7
+
+Each connection stores similarity.
+
+So internally you'll have something like:
+
+ S1 S2 S3 S4
+S1 - .82 .61 .05
+S2 .82 - .70 .12
+S3 .61 .70 - .08
+S4 .05 .12 .08 -
+
+This is the similarity matrix.
+
+8. Step 7 — TextRank
+
+Now we use TextRank.
+
+This is the part that determines which sentences are central to the conversation.
+
+The idea is similar to PageRank.
+
+A sentence is considered important when:
+
+It is connected to other important sentences.
+
+Suppose:
+
+S1 → important
+S2 → important
+S3 → important
+
+and S4 is only weakly connected.
+
+TextRank might produce:
+
+S2 = 0.91
+S1 = 0.84
+S3 = 0.81
+S4 = 0.12
+
+So S2, S1, and S3 become strong candidates for the summary.
+
+Why this is useful
+
+This is better than simply selecting sentences with the most keywords.
+
+A sentence may contain an important word but be irrelevant to the overall conversation.
+
+TextRank tries to find central information.
+
+9. Step 8 — Additional importance scoring
+
+This is where we make TextRank conversation-aware.
+
+TextRank alone was designed for general text.
+
+Your application is different.
+
+We care about things such as:
+
+requirements
+decisions
+constraints
+errors
+solutions
+current state
+next steps
+
+So we'll calculate another score.
+
+For example:
+
+Final Importance =
+ TextRank Score
+ + Keyword Score
+ + Decision Score
+ + Requirement Score
+ + Technical Score
+ + Recency Score
+ - Redundancy Score
+
+Example
+
+Sentence:
+
+"We decided to use extractive summarization instead of the local 270M LLM."
+
+might receive:
+
+TextRank 0.72
+Decision 0.90
+Technical 0.60
+Recency 0.80
+--------------------------------
+Final HIGH
+
+While:
+
+"Okay, let's continue."
+
+might receive:
+
+TextRank 0.15
+Decision 0
+Technical 0
+Recency 0.10
+--------------------------------
+Final LOW
+
+This is where your system becomes conversation-specific rather than being a generic TextRank implementation.
+
+10. Step 9 — Detect important categories
+
+Now we need to know what kind of information each selected sentence represents.
+
+For example:
+
+"We need the extension to work offline."
+
+→ REQUIREMENT
+
+"We decided to use extractive summarization."
+
+→ DECISION
+
+"The LLM took 30 seconds and produced poor summaries."
+
+→ FAILED APPROACH
+
+"The current prototype uses TF-IDF and TextRank."
+
+→ CURRENT STATE / TECHNICAL CONTEXT
+
+This can initially be done using rules and keywords, not an LLM.
+
+Example:
+
+"must", "need", "should"
+ ↓
+Requirement signal
+
+"decided", "we chose", "switch to"
+ ↓
+Decision signal
+
+"failed", "didn't work", "too slow"
+ ↓
+Failed approach signal
+
+This is extremely lightweight.
+
+11. Step 10 — Remove redundancy
+
+This is one of the most important stages.
+
+Suppose your conversation contains:
+
+S1: We want an offline extension.
+
+S2: The extension should work without a server.
+
+S3: We don't want users to depend on a backend.
+
+S4: It should operate locally.
+
+These are mostly expressing the same requirement.
+
+Without redundancy removal:
+
+Requirement:
+- We want an offline extension.
+- It should work without a server.
+- We don't want users to depend on a backend.
+- It should operate locally.
+
+That's wasteful.
+
+We want:
+
+Requirement:
+- The extension should perform summarization locally without requiring
+ a backend/server.
+
+Because we're doing extractive summarization, you have an important limitation:
+
+We shouldn't freely rewrite it.
+
+Instead, we can keep the best representative sentence:
+
+"The extension should work without a server."
+
+and discard the other highly similar sentences.
+
+How?
+
+Use similarity.
+
+If:
+
+similarity(S1, S2) > 0.85
+
+then one of them can be considered redundant.
+
+Choose the one with the higher importance score.
+
+12. Step 11 — Preserve chronology
+
+This is very important for conversations.
+
+Suppose:
+
+S1: Let's use an LLM.
+
+S2: The LLM is too slow.
+
+S3: We tried it and got poor quality.
+
+S4: We decided to use extractive summarization instead.
+
+If you simply sort by importance, you might get:
+
+S4
+S2
+S3
+S1
+
+This loses the story.
+
+Instead:
+
+Select by importance
+ ↓
+Remove duplicates
+ ↓
+Sort surviving content chronologically
+
+Result:
+
+S1
+S2
+S3
+S4
+
+Now another AI can understand the evolution:
+
+Initial idea
+ ↓
+Problem
+ ↓
+Experiment
+ ↓
+Decision
+
+This is particularly important for failed approaches and changed requirements.
+
+13. Step 12 — Build the structured context
+
+Now take the selected information and organize it.
+
+Example:
+
+USER GOAL
+Build a browser extension that captures useful context from AI chats
+for transfer between different AI systems.
+
+CRITICAL REQUIREMENTS
+- Work locally where practical.
+- Preserve important project context.
+- Avoid losing decisions and constraints.
+
+IMPORTANT DECISIONS
+- Use extractive summarization rather than the local 270M LLM.
+
+CONSTRAINTS
+- No expensive inference server.
+- Should work on ordinary CPUs.
+
+TECHNICAL CONTEXT
+- Investigating TF-IDF, cosine similarity, TextRank and lightweight
+ importance scoring.
+
+CURRENT STATE
+- Experimental summarization webpage is being used for testing.
+
+FAILED APPROACHES
+- Local 270M model was tested but had poor quality and high latency.
+
+OPEN ISSUES
+- Determine optimal scoring and redundancy thresholds.
+
+NEXT STEPS
+- Implement and benchmark the extractive pipeline.
+
+Notice that the final result is not generated by a language model.
+
+It is assembled from selected source information.
+
+14. The complete algorithm
+
+Now you can write the actual architecture in your notes:
+
+ RAW CHAT
+ │
+ ▼
+ ┌─────────────────┐
+ │ Clean/Normalize │
+ └────────┬────────┘
+ ▼
+ Segmentation
+ │
+ ▼
+ TF-IDF
+ │
+ ▼
+ Cosine Similarity
+ │
+ ▼
+ Similarity Graph
+ │
+ ▼
+ TextRank
+ │
+ ▼
+ Conversation Scoring
+ │
+ ├── Requirements
+ ├── Decisions
+ ├── Constraints
+ ├── Technical
+ ├── Failures
+ └── Recency
+ │
+ ▼
+ Redundancy Removal
+ │
+ ▼
+ Category Assignment
+ │
+ ▼
+ Chronological Ordering
+ │
+ ▼
+ Structured Context
+
+15. Where computation happens
+
+One of the biggest advantages of this architecture is that there is no model inference.
+
+You can implement almost everything using JavaScript:
+
+TF-IDF → JavaScript
+Cosine similarity → JavaScript
+Graph construction → JavaScript
+TextRank → JavaScript
+Keyword scoring → JavaScript
+Redundancy removal → JavaScript
+Categorization → JavaScript
+
+So:
+
+No Hugging Face model
+No model download
+No GPU
+No API key
+No server
+No inference cost
+
+This makes it much more suitable for your browser extension.
+
+16. One weakness you should know
+
+Pure extractive summarization cannot genuinely understand semantics.
+
+For example:
+
+"We should use a transformer."
+
+"I don't want to use a transformer."
+
+Keyword-based systems see:
+
+transformer
+transformer
+
+and may consider them highly related.
+
+But their meanings are opposite.
+
+Therefore, later we can improve your system with lightweight semantic techniques without immediately introducing an LLM.
+
+Possible evolution:
+
+V1
+TF-IDF + TextRank
+
+ ↓
+
+V2
+TF-IDF + TextRank + better heuristics
+
+ ↓
+
+V3
+Sentence embeddings + TextRank
+
+ ↓
+
+V4
+Hybrid extractive + small model
+
+But don't jump to V3 yet.
+
+First make V1 work extremely well.
+
+17. What you should build first
+
+Don't implement all of this simultaneously.
+
+Build it in this order:
+
+1. Transcript parser
+ ↓
+2. Sentence segmentation
+ ↓
+3. TF-IDF
+ ↓
+4. Cosine similarity
+ ↓
+5. TextRank
+ ↓
+6. Top sentence selection
+ ↓
+7. Redundancy removal
+ ↓
+8. Conversation-specific scoring
+ ↓
+9. Category assignment
+ ↓
+10. Final context formatting
+
+Then test each stage independently.
+
+Your first milestone should simply be:
+
+Given a pasted conversation, select the 20–30 most important sentences without losing major decisions or requirements.
+
+Once that works, the structured context layer becomes much easier.
+
+The most important principle to keep in your notes is:
+
+Selection happens first. Organization happens second. Compression happens last.
+
+That keeps the system lightweight and makes it much easier to debug when the summary loses something important.
+
+User: Convert to writing block
+
+Assistant: extractive summarization engine
+
+When you acknowledge, wait for the user's next instruction.
