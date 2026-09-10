@@ -1,7 +1,16 @@
 import { ChatMessage, ConversationMetadata } from '../../shared/types';
 import { db } from '../../storage/db';
 
-const TRANSFER_PREFIX = `We are starting a fresh session. I am pasting the context brief from our previous conversation below. Read it to fully absorb the state of the project, adopt this context as our baseline, and wait for my next instruction without saying anything other than that you are ready.`;
+// const TRANSFER_PREFIX = `We are starting a fresh session. I am pasting the context brief from our previous conversation below. Read it to fully absorb the state of the project, adopt this context as our baseline, and wait for my next instruction without saying anything other than that you are ready.`;
+const TRANSFER_PREFIX = `The following is Extracted Working Context from a previous AI conversation.
+It was produced by a deterministic extractive process. It is not a complete transcript and may omit information from the original conversation.
+Treat this context as prior working context for the conversation. Preserve the latest confirmed goals, requirements, constraints, decisions, current state, open issues, and next actions.
+Do not invent missing information or assume omitted information is false. Do not treat suggestions, questions, or superseded decisions as current unless the context explicitly indicates they were confirmed.`
+
+const TRANSFER_POSTFIX = `Continue the conversation from this working context.
+Use the context to avoid repeating decisions or work that has already been settled. Prefer the latest confirmed state over older alternatives.
+You may provide new information or recommendations when needed, but do not claim that newly generated information came from the previous conversation.
+If the context is insufficient to answer correctly, ask for the missing information rather than guessing.`
 
 let currentNativeChatId: string | null = null;
 
@@ -268,7 +277,7 @@ async function loadAllSummaries() {
       renderTransferCards(response.conversations);
     }
   } catch (err) {
-    console.error('Failed to load summaries:', err);
+    console.warn('Failed to load summaries:', err);
   }
 }
 
@@ -277,7 +286,7 @@ async function handleCardClick(conversationId: string) {
   const summary = summaryMap.get(conversationId);
   if (!summary) return;
 
-  const textToInject = `${TRANSFER_PREFIX}\n\n${summary}`;
+  const textToInject = `${TRANSFER_PREFIX}\n\n${summary}\n\n${TRANSFER_POSTFIX}`;
 
   const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!activeTab?.id) return;
@@ -288,7 +297,7 @@ async function handleCardClick(conversationId: string) {
       payload: { text: textToInject },
     });
   } catch (err) {
-    console.error('Inject failed, attempting scripting.executeScript fallback:', err);
+    console.warn('Inject failed, attempting scripting.executeScript fallback:', err);
     // Fallback: use executeScript to inject into the page
     try {
       await chrome.scripting.executeScript({
@@ -296,8 +305,9 @@ async function handleCardClick(conversationId: string) {
         func: injectTextIntoPage,
         args: [textToInject],
       });
-    } catch (fallbackErr) {
-      console.error('Fallback injection also failed:', fallbackErr);
+    } catch (fallbackErr: any) {
+      const msg = fallbackErr?.message || String(fallbackErr);
+      alert(`Transfer failed. Please ensure you are on a supported chat page and refresh if necessary.\n\nDetails: ${msg}`);
     }
   }
 }
@@ -532,36 +542,6 @@ function injectTextIntoPage(text: string) {
     nativeInputValueSetter?.call(input, text);
     input.dispatchEvent(new Event('input', { bubbles: true }));
   }
-
-  // Auto-send: find and click the send button after a short delay
-  setTimeout(() => {
-    const sendSelectors = [
-      'button[data-testid="send-button"]',     // ChatGPT
-      'button[aria-label="Send Message"]',     // Claude
-      'button.send-button',                    // Gemini
-      'button[aria-label="Send"]',             // generic
-      'button[type="submit"]',                 // DeepSeek / generic
-    ];
-
-    let sendBtn: HTMLButtonElement | null = null;
-    for (const sel of sendSelectors) {
-      sendBtn = document.querySelector(sel);
-      if (sendBtn) break;
-    }
-
-    if (sendBtn) {
-      sendBtn.click();
-    } else {
-      // Try pressing Enter as a last resort
-      const enterEvent = new KeyboardEvent('keydown', {
-        key: 'Enter',
-        code: 'Enter',
-        bubbles: true,
-        cancelable: true,
-      });
-      input!.dispatchEvent(enterEvent);
-    }
-  }, 300);
 }
 
 // ── Init ───────────────────────────────────────────────────────────────────
@@ -573,4 +553,5 @@ async function init() {
   setupListeners();
 }
 
+document.addEventListener('DOMContentLoaded', init);
 document.addEventListener('DOMContentLoaded', init);

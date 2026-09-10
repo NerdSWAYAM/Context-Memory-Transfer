@@ -9,7 +9,7 @@ import { MutationWatcher } from './mutation-watcher';
 import { extractMessageFromNode } from './dom-extractor';
 
 function reportProgress(progress: CaptureProgress): void {
-  chrome.runtime.sendMessage({ type: 'CAPTURE_PROGRESS', progress }).catch(() => {});
+  chrome.runtime.sendMessage({ type: 'CAPTURE_PROGRESS', progress }).catch(() => { });
 }
 
 export class ConversationCaptureOrchestrator {
@@ -352,25 +352,26 @@ function injectTextAndSend(text: string): void {
     input.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
-  // Auto-send after a short delay for the framework to register the input
+  // Auto-send: find and click the send button after a short delay
   setTimeout(() => {
     const sendSelectors = [
-      'button[data-testid="send-button"]',   // ChatGPT
-      'button[aria-label="Send Message"]',   // Claude
-      'button.send-button',                  // Gemini
-      'button[aria-label="Send"]',           // generic
-      'button[type="submit"]',               // DeepSeek / generic
+      'button[data-testid="send-button"]',     // ChatGPT
+      'button[aria-label="Send Message"]',     // Claude
+      'button.send-button',                    // Gemini
+      'button[aria-label="Send"]',             // generic
+      'button[type="submit"]',                 // DeepSeek / generic
     ];
 
     let sendBtn: HTMLButtonElement | null = null;
     for (const sel of sendSelectors) {
       sendBtn = document.querySelector(sel);
-      if (sendBtn) break;
+      if (sendBtn && !sendBtn.disabled) break;
     }
 
-    if (sendBtn) {
+    if (sendBtn && !sendBtn.disabled) {
       sendBtn.click();
     } else {
+      // Try pressing Enter as a last resort
       const enterEvent = new KeyboardEvent('keydown', {
         key: 'Enter',
         code: 'Enter',

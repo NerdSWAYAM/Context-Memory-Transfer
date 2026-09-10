@@ -1,13 +1,9 @@
-window.SummaryEngine = window.SummaryEngine || {};
-
-(() => {
-  const engine = window.SummaryEngine;
+import { config } from '../config';
 
   function roundNumber(value) {
     return Number(value.toFixed(6));
   }
-
-  function computeSimilarity(tfidfResult) {
+export function computeSimilarity(tfidfResult) {
     const documents = tfidfResult.documents || [];
     const invertedIndex = new Map();
     const pairDotProducts = new Map();
@@ -83,7 +79,7 @@ window.SummaryEngine = window.SummaryEngine || {};
         .sort((left, right) => (
           right.score - left.score || left.segmentId - right.segmentId
         ))
-        .slice(0, engine.config.topNeighborsPerSegment);
+        .slice(0, config.topNeighborsPerSegment);
 
       return {
         segmentId: document.segmentId,
@@ -109,5 +105,4 @@ window.SummaryEngine = window.SummaryEngine || {};
     };
   }
 
-  engine.computeSimilarity = computeSimilarity;
-})();
+  

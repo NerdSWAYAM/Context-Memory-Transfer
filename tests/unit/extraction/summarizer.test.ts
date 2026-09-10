@@ -1,54 +1,38 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { summarize } from '../../../src/extraction/summarizer';
+import { ChatMessage } from '../../../src/shared/types';
 
 describe('Summarizer', () => {
-    let originalFetch: typeof global.fetch;
-
-    beforeEach(() => {
-        vi.stubEnv('OPENROUTER_API_KEY', 'test_key');
-        vi.stubEnv('OPENROUTER_URL', 'https://test-openrouter.com/api/v1');
-
-        originalFetch = global.fetch;
-        global.fetch = vi.fn();
-    });
-
-    afterEach(() => {
-        global.fetch = originalFetch;
-        vi.unstubAllGlobals();
-        vi.clearAllMocks();
-    });
-
-    it('should successfully summarize a transcript', async () => {
-        const mockResponse = {
-            ok: true,
-            json: async () => ({
-                choices: [
-                    { message: { content: 'This is a mocked summary.' } }
-                ]
-            })
-        };
-        (global.fetch as any).mockResolvedValue(mockResponse);
+    it('should successfully summarize a transcript using deterministic engine', async () => {
+        const mockMessages: ChatMessage[] = [
+            {
+                id: '1',
+                role: 'user',
+                text: 'We must use React for the frontend.',
+                timestamp: Date.now()
+            },
+            {
+                id: '2',
+                role: 'assistant',
+                text: 'Okay, React it is.',
+                timestamp: Date.now() + 1000
+            }
+        ];
 
         const onProgress = vi.fn();
-        const summary = await summarize('Some test transcript', onProgress);
+        const summary = await summarize(mockMessages, onProgress);
 
-        expect(summary).toBe('This is a mocked summary.');
-        expect(onProgress).toHaveBeenCalledWith('Sending transcript to OpenRouter for summarization...');
+        expect(typeof summary).toBe('string');
+        expect(summary.length).toBeGreaterThan(0);
+        expect(onProgress).toHaveBeenCalledWith('Running deterministic summarization engine...');
         expect(onProgress).toHaveBeenCalledWith('Summarization complete!');
-        expect(global.fetch).toHaveBeenCalledTimes(1);
     });
 
-    it('should throw an error if API request fails', async () => {
-        const mockResponse = {
-            ok: false,
-            json: async () => ({
-                error: { message: 'Invalid API Key' }
-            })
-        };
-        (global.fetch as any).mockResolvedValue(mockResponse);
+    it('should handle empty messages gracefully', async () => {
+        const mockMessages: ChatMessage[] = [];
 
-        await expect(summarize('test')).rejects.toThrow('Invalid API Key');
+        const summary = await summarize(mockMessages);
+        
+        expect(typeof summary).toBe('string');
     });
-
-
 });

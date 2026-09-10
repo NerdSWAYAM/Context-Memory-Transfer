@@ -1,9 +1,4 @@
-window.SummaryEngine = window.SummaryEngine || {};
-
-(() => {
-  const engine = window.SummaryEngine;
-
-  engine.config = {
+  export const config = {
     minTokenLength: 2,
     topTermsPerSegment: 5,
     topNeighborsPerSegment: 3,
@@ -169,4 +164,3 @@ window.SummaryEngine = window.SummaryEngine || {};
       /\btodo\b/i
     ]
   };
-})();

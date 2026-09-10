@@ -1,9 +1,6 @@
-window.SummaryEngine = window.SummaryEngine || {};
+import { config } from '../config';
 
-(() => {
-  const engine = window.SummaryEngine;
-
-  engine.removeRedundancy = function(categoriesResult, similarityResult, config) {
+  export function removeRedundancy(categoriesResult, similarityResult, config) {
     const threshold = config.redundancyThreshold || 0.70;
     const maxOutputSegments = config.maxOutputSegments || 30;
     const allCategorizedSegments = categoriesResult.categorizedSegments || [];
@@ -111,4 +108,3 @@ window.SummaryEngine = window.SummaryEngine || {};
     };
   };
 
-})();

@@ -1,9 +1,4 @@
-window.SummaryEngine = window.SummaryEngine || {};
-
-(() => {
-  const engine = window.SummaryEngine;
-
-  engine.CUES = {
+  export const CUES = {
     requirement: [
       /\b(?:must|need to|needs to|should|required to|have to|necessary|make sure|ensure)\b/i
     ],
@@ -34,4 +29,3 @@ window.SummaryEngine = window.SummaryEngine || {};
       /\b(?:not sure|don't know|how to|problem with|issue|bug|question|unresolved)\b/i
     ]
   };
-})();

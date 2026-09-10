@@ -1,8 +1,3 @@
-window.SummaryEngine = window.SummaryEngine || {};
-
-(() => {
-  const engine = window.SummaryEngine;
-
   const CATEGORY_NAMES = {
     GOAL: "[OBJ] Objective",
     REQUIREMENT: "[REQ] Requirements",
@@ -45,7 +40,7 @@ window.SummaryEngine = window.SummaryEngine || {};
     return count;
   }
 
-  engine.assignCategories = function(statementTypeResult, cues) {
+  export function assignCategories(statementTypeResult, cues) {
     // Accept either classifiedSegments (from statementType stage) or qualityFilteredSegments (legacy)
     const retainedSegments =
       statementTypeResult.classifiedSegments ||
@@ -157,4 +152,3 @@ window.SummaryEngine = window.SummaryEngine || {};
     };
   };
 
-})();

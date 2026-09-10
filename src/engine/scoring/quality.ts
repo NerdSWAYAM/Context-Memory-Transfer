@@ -1,9 +1,6 @@
-window.SummaryEngine = window.SummaryEngine || {};
+import { config } from '../config';
 
-(() => {
-  const engine = window.SummaryEngine;
-
-  engine.filterQuality = function(importanceResult, config) {
+  export function filterQuality(importanceResult, config) {
     const scoredSegments = importanceResult.scoredSegments || [];
     const minTokenLength = config.minTokenLength || 3;
     const fillerPhrases = config.fillerPhrases || [];
@@ -63,4 +60,3 @@ window.SummaryEngine = window.SummaryEngine || {};
     };
   };
 
-})();

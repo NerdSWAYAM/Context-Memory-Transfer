@@ -1,7 +1,4 @@
-window.SummaryEngine = window.SummaryEngine || {};
-
-(() => {
-  const engine = window.SummaryEngine;
+import { config } from '../config';
 
   function countCueMatches(text, cues) {
     if (!cues || cues.length === 0) return 0;
@@ -22,7 +19,7 @@ window.SummaryEngine = window.SummaryEngine || {};
     return segment.sentenceIndex / (totalSegments - 1);
   }
 
-  engine.computeImportance = function(textRankResult, tfidfResult, config, cues) {
+  export function computeImportance(textRankResult, tfidfResult, config, cues) {
     const weights = config.importanceWeights || {
       textRank: 0.30,
       tfidf: 0.15,
@@ -122,4 +119,3 @@ window.SummaryEngine = window.SummaryEngine || {};
     };
   };
 
-})();

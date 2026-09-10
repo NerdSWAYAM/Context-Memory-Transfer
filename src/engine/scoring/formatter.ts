@@ -1,8 +1,3 @@
-window.SummaryEngine = window.SummaryEngine || {};
-
-(() => {
-  const engine = window.SummaryEngine;
-
   const CATEGORY_ORDER = [
     "[OBJ] Objective",
     "[REQ] Requirements",
@@ -14,7 +9,7 @@ window.SummaryEngine = window.SummaryEngine || {};
     "[NEXT] Next Actions"
   ];
 
-  engine.formatContext = function(chronologyResult) {
+  export function formatContext(chronologyResult) {
     const segments = chronologyResult.orderedSegments || [];
     
     // Group segments by category, preserving their chronological order within the category
@@ -52,4 +47,3 @@ window.SummaryEngine = window.SummaryEngine || {};
     };
   };
 
-})();

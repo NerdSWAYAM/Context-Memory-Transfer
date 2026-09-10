@@ -1,8 +1,6 @@
-window.SummaryEngine = window.SummaryEngine || {};
+import { config } from '../config';
 
-(() => {
-  const engine = window.SummaryEngine;
-  const stopWords = new Set(engine.config.stopWords);
+  const stopWords = new Set(config.stopWords);
 
   function roundNumber(value) {
     return Number(value.toFixed(6));
@@ -21,7 +19,7 @@ window.SummaryEngine = window.SummaryEngine || {};
     const matches = text.toLowerCase().match(/[a-z0-9]+(?:-[a-z0-9]+)*/g) || [];
 
     return matches.filter((token) => (
-      token.length >= engine.config.minTokenLength
+      token.length >= config.minTokenLength
       && !stopWords.has(token)
     ));
   }
@@ -32,8 +30,7 @@ window.SummaryEngine = window.SummaryEngine || {};
       return counts;
     }, {});
   }
-
-  function computeTfidf(segments) {
+export function computeTfidf(segments) {
     const baseDocuments = segments.map((segment) => {
       const tokens = tokenize(segment.text);
       const termCounts = countTerms(tokens);
@@ -106,7 +103,7 @@ window.SummaryEngine = window.SummaryEngine || {};
         termCounts: orderObject(document.termCounts),
         tfidf: orderObject(tfidf),
         vectorNorm: roundNumber(Math.sqrt(sumSquares)),
-        topTerms: topTerms.slice(0, engine.config.topTermsPerSegment)
+        topTerms: topTerms.slice(0, config.topTermsPerSegment)
       };
     });
 
@@ -123,5 +120,4 @@ window.SummaryEngine = window.SummaryEngine || {};
     };
   }
 
-  engine.computeTfidf = computeTfidf;
-})();
+  

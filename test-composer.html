@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <textarea id="prompt-textarea"></textarea>
+  <div contenteditable="true" class="ProseMirror"></div>
+  <script>
+    const ta = document.getElementById('prompt-textarea');
+    ta.addEventListener('input', (e) => {
+      console.log('Textarea input event fired!', ta.value);
+    });
+  </script>
+</body>
+</html>

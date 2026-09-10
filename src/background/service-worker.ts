@@ -218,9 +218,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           return;
         }
 
-        const pairs = formatChronologicalPairs(messages);
-        const transcript = pairs.join('\n\n');
-        const result = await summarize(transcript, (progressMsg) => {
+        const result = await summarize(messages, (progressMsg) => {
           chrome.runtime.sendMessage({ type: 'ML_PROGRESS', progress: progressMsg }).catch(() => {});
         });
 

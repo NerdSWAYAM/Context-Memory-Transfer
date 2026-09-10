@@ -1,7 +1,4 @@
-window.SummaryEngine = window.SummaryEngine || {};
-
-(() => {
-  const engine = window.SummaryEngine;
+import { config } from '../config';
 
   // Statement types that are useful for final context
   const USEFUL_TYPES = new Set([
@@ -168,7 +165,7 @@ window.SummaryEngine = window.SummaryEngine || {};
     return { statementType: "FACT", statementTypeConfidence: confidence, isContextUseful: true };
   }
 
-  engine.classifyStatementTypes = function(qualityResult, cues, config) {
+  export function classifyStatementTypes(qualityResult, cues, config) {
     const segments = qualityResult.qualityFilteredSegments || [];
     let softExcludedCount = 0;
 
@@ -233,4 +230,3 @@ window.SummaryEngine = window.SummaryEngine || {};
     };
   };
 
-})();

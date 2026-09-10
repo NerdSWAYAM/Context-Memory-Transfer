@@ -1,8 +1,6 @@
-window.SummaryEngine = window.SummaryEngine || {};
+import { config } from '../config';
 
-(() => {
-  const engine = window.SummaryEngine;
-  const { fillerPhrases, artifactPatterns, criticalCuePatterns } = engine.config;
+  const { fillerPhrases, artifactPatterns, criticalCuePatterns } = config;
 
   function normalizeWhitespace(text) {
     return text
@@ -26,8 +24,7 @@ window.SummaryEngine = window.SummaryEngine || {};
     const normalized = text.toLowerCase();
     return fillerPhrases.includes(normalized);
   }
-
-  function cleanMessages(messages) {
+export function cleanMessages(messages) {
     const seenMessages = new Set();
     const cleanedMessages = [];
     const removedMessages = [];
@@ -92,5 +89,4 @@ window.SummaryEngine = window.SummaryEngine || {};
     };
   }
 
-  engine.cleanMessages = cleanMessages;
-})();
+  

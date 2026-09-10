@@ -1,9 +1,5 @@
-window.SummaryEngine = window.SummaryEngine || {};
-
-(() => {
-  const engine = window.SummaryEngine;
-
-  function buildSimilarityGraph(similarityResult, threshold = engine.config.graphSimilarityThreshold) {
+import { config } from '../config';
+export function buildSimilarityGraph(similarityResult, threshold = config.graphSimilarityThreshold) {
     const edges = (similarityResult.pairs || [])
       .filter((pair) => pair.score >= threshold)
       .map((pair) => ({ ...pair, weight: pair.score }));
@@ -27,5 +23,4 @@ window.SummaryEngine = window.SummaryEngine || {};
     };
   }
 
-  engine.buildSimilarityGraph = buildSimilarityGraph;
-})();
+  

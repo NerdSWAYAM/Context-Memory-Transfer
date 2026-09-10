@@ -1,9 +1,4 @@
-window.SummaryEngine = window.SummaryEngine || {};
-
-(() => {
-  const engine = window.SummaryEngine;
-
-  engine.orderChronologically = function(redundancyResult) {
+  export function orderChronologically(redundancyResult) {
     // Accept either retainedSegments (from redundancy) or categorizedSegments (legacy)
     const segments = redundancyResult.retainedSegments || redundancyResult.categorizedSegments || [];
     
@@ -22,4 +17,3 @@ window.SummaryEngine = window.SummaryEngine || {};
     };
   };
 
-})();

@@ -1,9 +1,5 @@
-window.SummaryEngine = window.SummaryEngine || {};
-
-(() => {
-  const engine = window.SummaryEngine;
-
-  function computeTextRank(graph, segments) {
+import { config } from '../config';
+export function computeTextRank(graph, segments) {
     const nodes = (segments || []).map((segment) => segment.id);
     const adjacency = new Map(nodes.map((id) => [id, []]));
 
@@ -12,8 +8,8 @@ window.SummaryEngine = window.SummaryEngine || {};
       adjacency.get(edge.targetId)?.push({ id: edge.sourceId, weight: edge.weight });
     });
 
-    const damping = engine.config.textrankDamping;
-    const iterations = engine.config.textrankIterations;
+    const damping = config.textrankDamping;
+    const iterations = config.textrankIterations;
     let scores = new Map(nodes.map((id) => [id, 1]));
 
     for (let iteration = 0; iteration < iterations; iteration += 1) {
@@ -45,5 +41,4 @@ window.SummaryEngine = window.SummaryEngine || {};
     };
   }
 
-  engine.computeTextRank = computeTextRank;
-})();
+  

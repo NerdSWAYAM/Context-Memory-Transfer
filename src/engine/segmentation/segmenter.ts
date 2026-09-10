@@ -1,8 +1,3 @@
-window.SummaryEngine = window.SummaryEngine || {};
-
-(() => {
-  const engine = window.SummaryEngine;
-
   function splitIntoSentences(text) {
     const lines = text
       .replaceAll("\r\n", "\n")
@@ -25,8 +20,7 @@ window.SummaryEngine = window.SummaryEngine || {};
 
     return sentences;
   }
-
-  function segmentMessages(messages) {
+export function segmentMessages(messages) {
     const segments = [];
 
     for (const message of messages) {
@@ -48,5 +42,4 @@ window.SummaryEngine = window.SummaryEngine || {};
     return segments;
   }
 
-  engine.segmentMessages = segmentMessages;
-})();
+  
